@@ -1,307 +1,670 @@
-import reflex as rx
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Planner & Shopping List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles_3.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="top-nav">
+        <div class="logo">
+            <i class="fas fa-wallet"></i>
+            <h1>Finance Planner</h1>
+        </div>
+        <div class="user-profile">
+            <img src="https://via.placeholder.com/40" alt="User" class="avatar" id="user-avatar">
+            <span id="user-name">Stefania Nord</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </header>
 
-# ====================== 顏色系統定義 ======================
-BG_COLOR = "#111116"       # 全局大背景
-CARD_BG = "#1b1b22"       # 卡片背景
-TEXT_MAIN = "#ffffff"     # 主文字色
-TEXT_MUTED = "#787880"    # 副文字色
-PURPLE = "#a855f7"        # 主題亮紫色
-GREEN = "#10b981"         # 收入/儲蓄綠
-RED = "#f43f5e"           # 支出紅
+    <div class="main-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <nav class="sidebar-menu">
+                <a href="#dashboard" class="active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#budget">
+                    <i class="fas fa-calculator"></i>
+                    <span>Budget Planner</span>
+                </a>
+                <a href="#expenses">
+                    <i class="fas fa-receipt"></i>
+                    <span>Actual Expenses</span>
+                </a>
+                <a href="#savings">
+                    <i class="fas fa-piggy-bank"></i>
+                    <span>Saving Goals</span>
+                </a>
+                <a href="#shopping">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Shopping List</span>
+                </a>
+                <a href="#settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
 
-# ====================== 輔助元件 ======================
+            <!-- 侧边栏底部卡片 -->
+            <div class="sidebar-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Financial Overview</span>
+                </div>
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <p>Total Income</p>
+                        <p class="value" id="sidebar-total-income">$8,961</p>
+                    </div>
+                    <div class="stat-item">
+                        <p>Total Expenses</p>
+                        <p class="value" id="sidebar-total-expenses">$6,941.5</p>
+                    </div>
+                    <div class="stat-item">
+                        <p>Balance</p>
+                        <p class="value" id="sidebar-balance">$1,978.5</p>
+                    </div>
+                </div>
+                <button class="card-btn">View Details</button>
+            </div>
+        </aside>
 
-def sidebar_item(text: str, icon: str, active: bool = False):
-    """左側菜單項：深色模式專屬"""
-    return rx.hstack(
-        rx.icon(icon, size=18, color=PURPLE if active else TEXT_MUTED),
-        rx.text(text, font_size="14px", weight="medium" if active else "regular", color=TEXT_MAIN if active else TEXT_MUTED),
-        padding="12px 16px",
-        border_radius="10px",
-        background_color=rx.cond(active, "rgba(168, 85, 247, 0.15)", "transparent"),
-        _hover={"background_color": "rgba(255, 255, 255, 0.05)", "color": TEXT_MAIN},
-        cursor="pointer",
-        width="100%",
-        align="center",
-    )
+        <!-- 主内容区 -->
+        <main class="content-area">
+            <!-- Dashboard 区域 -->
+            <section id="dashboard" class="page active">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                    <div class="header-actions">
+                        <div class="date-filter">
+                            <i class="fas fa-calendar"></i>
+                            <select>
+                                <option>May 2022</option>
+                                <option>April 2022</option>
+                                <option>March 2022</option>
+                            </select>
+                        </div>
+                        <button class="btn primary-btn">
+                            <i class="fas fa-plus"></i>
+                            Add Transaction
+                        </button>
+                    </div>
+                </div>
 
-def top_stat_card(title: str, value: str, subtext: str, subtext_color: str):
-    """頂部四大數據卡片"""
-    return rx.card(
-        rx.vstack(
-            rx.text(title, color=TEXT_MUTED, font_size="12px", weight="medium"),
-            rx.text(value, font_size="24px", weight="bold", color=TEXT_MAIN, margin_top="4px"),
-            rx.text(subtext, color=subtext_color, font_size="11px", margin_top="4px"),
-            align_items="start",
-            spacing="0",
-        ),
-        style={"background_color": CARD_BG, "border": "none", "border-radius": "14px"},
-        padding="16px 20px",
-        width="100%",
-    )
+                <!-- 第一行卡片 -->
+                <div class="row cards-row">
+                    <!-- 总余额卡片 -->
+                    <div class="card balance-card">
+                        <div class="card-header">
+                            <h3>Overall Balance</h3>
+                            <i class="fas fa-ellipsis-v"></i>
+                        </div>
+                        <div class="card-body">
+                            <p class="balance" id="dashboard-balance">$17,871</p>
+                            <div class="trend positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>12% from last month</span>
+                            </div>
+                        </div>
+                    </div>
 
-def formula_card(percent: str, label: str, amount: str, icon: str, color: str, desc: str):
-    """60-10-30 自動分配卡片"""
-    return rx.box(
-        rx.vstack(
-            rx.hstack(
-                rx.vstack(
-                    rx.hstack(
-                        rx.text(percent, color=color, weight="bold", font_size="15px"),
-                        rx.text(label, color=TEXT_MAIN, weight="medium", font_size="15px"),
-                        spacing="2"
-                    ),
-                    rx.text(amount, font_size="26px", weight="bold", color=TEXT_MAIN, margin_top="4px"),
-                    align_items="start",
-                    spacing="0",
-                ),
-                rx.spacer(),
-                rx.icon(icon, size=28, color=TEXT_MUTED, stroke_width=1.2),
-                width="100%",
-                align="start",
-            ),
-            # 進度條
-            rx.progress(value=int(percent.replace("%","")), color_scheme="purple" if color==PURPLE else ("green" if color==GREEN else "gray"), size="1", width="100%", margin_top="12px"),
-            rx.text(desc, color=TEXT_MUTED, font_size="11px", margin_top="8px"),
-            align_items="start",
-            spacing="0",
-            width="100%",
-        ),
-        background_color="rgba(255, 255, 255, 0.02)",
-        border="1px solid rgba(255, 255, 255, 0.05)",
-        border_radius="12px",
-        padding="16px",
-        width="100%",
-    )
+                    <!-- 信用卡卡片 -->
+                    <div class="card credit-card" id="credit-card-container">
+                        <div class="card-header">
+                            <span>Credit Card</span>
+                            <span class="visa">VISA</span>
+                        </div>
+                        <div class="card-body">
+                            <h4 id="card-holder">Stefania Nord</h4>
+                            <p class="card-number" id="card-number">•••• •••• •••• 7899</p>
+                            <div class="card-footer">
+                                <p class="expiry" id="card-expiry">05/24</p>
+                                <p class="card-balance" id="card-balance">$1,425</p>
+                            </div>
+                        </div>
+                        <button class="btn small-btn edit-credit-card"><i class="fas fa-edit"></i> Edit Card</button>
+                    </div>
+                </div>
 
-# ====================== 主頁面佈局 ======================
-def index() -> rx.Component:
-    return rx.box(
-        rx.flex(
-            # 左側邊欄
-            rx.box(
-                rx.vstack(
-                    rx.hstack(
-                        rx.box(width="24px", height="24px", background_color=PURPLE, border_radius="6px", children=[rx.center(rx.text("F", color="white", weight="bold", font_size="14px"), height="100%")]),
-                        rx.heading("FinPlan", size="4", color=TEXT_MAIN, weight="bold"),
-                        align="center",
-                        padding="24px 20px",
-                        spacing="2",
-                    ),
-                    rx.vstack(
-                        sidebar_item("Dashboard", "layout-dashboard", active=True),
-                        sidebar_item("交易記錄", "arrow-left-right"),
-                        sidebar_item("60-10-30 計劃", "pie-chart"),
-                        sidebar_item("儲蓄目標", "target"),
-                        sidebar_item("分析", "line-chart"),
-                        spacing="1",
-                        width="100%",
-                        padding="0 12px",
-                    ),
-                    rx.spacer(),
-                    # 登出按鈕
-                    rx.box(
-                        sidebar_item("登出", "log-out"),
-                        padding="20px 12px",
-                        width="100%",
-                    ),
-                    width="240px",
-                    height="100vh",
-                    background_color="#14141b",
-                    border_right="1px solid rgba(255, 255, 255, 0.05)",
-                    position="fixed",
-                    left="0",
-                    top="0",
-                    z_index="100",
-                ),
-            ),
+                <!-- 信用卡表单（默认隐藏） -->
+                <div class="credit-form card hidden" id="credit-form">
+                    <div class="form-header">
+                        <h3>Edit Credit Card</h3>
+                        <button class="close-form"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="form-group">
+                        <label>Card Holder Name</label>
+                        <input type="text" id="credit-holder" placeholder="e.g. Stefania Nord">
+                    </div>
+                    <div class="form-group">
+                        <label>Card Number</label>
+                        <input type="text" id="credit-number" placeholder="•••• •••• •••• ••••" maxlength="19">
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="text" id="credit-expiry" placeholder="MM/YY">
+                    </div>
+                    <div class="form-group">
+                        <label>Balance ($)</label>
+                        <input type="number" id="credit-balance" placeholder="0.00">
+                    </div>
+                    <button class="btn primary-btn save-credit">
+                        <i class="fas fa-save"></i> Save Card
+                    </button>
+                </div>
 
-            # 右側主內容區（完美擠入螢幕，絕不滾動）
-            rx.box(
-                rx.vstack(
-                    # 頂部導航列
-                    rx.hstack(
-                        rx.vstack(
-                            rx.hstack(
-                                rx.heading("Welcome back, Yin Kwan!", size="5", weight="bold", color=TEXT_MAIN),
-                                rx.text("👋", font_size="18px"),
-                                align="center",
-                                spacing="1"
-                            ),
-                            rx.text("今日係 2026 年 2 月 24 日 • 葵青區 • 無租生活", color=TEXT_MUTED, font_size="12px"),
-                            spacing="0",
-                        ),
-                        rx.spacer(),
-                        # 右上角收入狀態
-                        rx.hstack(
-                            rx.badge("月入", variant="surface", color_scheme="gray"),
-                            rx.text("15000", font_size="18px", weight="bold", color=TEXT_MAIN),
-                            rx.text("$", color=TEXT_MUTED, font_size="14px"),
-                            rx.avatar(fallback="YK", size="2", radius="full", style={"background_color": PURPLE}),
-                            background_color=CARD_BG,
-                            padding="6px 14px",
-                            border_radius="9999px",
-                            align="center",
-                            spacing="2",
-                        ),
-                        padding="15px 32px",
-                        align="center",
-                        width="100%",
-                        height="64px",
-                    ),
-                    
-                    # 核心看板主體
-                    rx.vstack(
-                        # 1. 頂部四大數據卡
-                        rx.grid(
-                            top_stat_card("總結餘", "$33,000", "↑ 12.1% vs 上月", GREEN),
-                            top_stat_card("本月收入", "$15,000", "已自動扣 MPF", GREEN),
-                            top_stat_card("本月開支", "$6,222", "↑ 2.4% vs 上月", RED),
-                            top_stat_card("總儲蓄", "$33,000", "↑ 12.1% vs 上月", GREEN),
-                            columns="4",
-                            spacing="4",
-                            width="100%",
-                        ),
+                <!-- 第二行内容 -->
+                <div class="row content-row">
+                    <!-- 左侧：账户 + 交易 -->
+                    <div class="col left-col">
+                        <!-- 账户列表 -->
+                        <div class="card accounts-card">
+                            <div class="card-header">
+                                <h3>Other Accounts</h3>
+                                <button class="show-more">Show more</button>
+                            </div>
+                            <div class="accounts-list">
+                                <div class="account-item">
+                                    <div class="account-info">
+                                        <i class="fas fa-university"></i>
+                                        <div>
+                                            <p>Salary</p>
+                                            <p class="account-number">••••• 2305</p>
+                                        </div>
+                                    </div>
+                                    <p class="account-balance">$503</p>
+                                </div>
+                                <div class="account-item">
+                                    <div class="account-info">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        <div>
+                                            <p>Virtual cash account</p>
+                                            <p class="account-number">Cash</p>
+                                        </div>
+                                    </div>
+                                    <p class="account-balance">$849</p>
+                                </div>
+                                <div class="account-item">
+                                    <div class="account-info">
+                                        <i class="fas fa-credit-card"></i>
+                                        <div>
+                                            <p>Credit Card</p>
+                                            <p class="account-number">••••• 2305</p>
+                                        </div>
+                                    </div>
+                                    <p class="account-balance">$34</p>
+                                </div>
+                                <div class="account-item">
+                                    <div class="account-info">
+                                        <i class="fas fa-piggy-bank"></i>
+                                        <div>
+                                            <p>Savings</p>
+                                            <p class="account-number">••••• 1207</p>
+                                        </div>
+                                    </div>
+                                    <p class="account-balance">$15,000</p>
+                                </div>
+                            </div>
+                        </div>
 
-                        # 2. 60-10-30 自動分配計算器卡片
-                        rx.card(
-                            rx.vstack(
-                                rx.hstack(
-                                    rx.heading("60-10-30 自動分配計算器", size="3", color=TEXT_MAIN),
-                                    rx.spacer(),
-                                    rx.badge("實時更新", variant="surface", color_scheme="purple", size="1"),
-                                    width="100%",
-                                ),
-                                rx.grid(
-                                    formula_card("60%", "必需開支", "$9,000", "home", GREEN, "飲食、交通、水電、日用品"),
-                                    formula_card("10%", "純享受", "$1,500", "coffee", "#e2e8f0", "咖啡、外出、娛樂、網購"),
-                                    formula_card("30%", "儲蓄 + 投資", "$4,500", "briefcase", PURPLE, "每週基金月供 $1000，剩餘現金儲蓄 $167"),
-                                    columns="3",
-                                    spacing="4",
-                                    width="100%",
-                                    margin_top="14px",
-                                ),
-                                width="100%",
-                            ),
-                            style={"background_color": CARD_BG, "border": "none", "border-radius": "14px"},
-                            padding="16px 20px",
-                            width="100%",
-                        ),
+                        <!-- 最近交易 -->
+                        <div class="card transactions-card">
+                            <div class="card-header">
+                                <h3>Last Transactions</h3>
+                                <div class="transaction-filters">
+                                    <select>
+                                        <option>16-23/05/22</option>
+                                    </select>
+                                    <select>
+                                        <option>All accounts</option>
+                                    </select>
+                                    <select>
+                                        <option>All categories</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="transactions-list">
+                                <div class="transaction-item">
+                                    <span class="date">21/05/22</span>
+                                    <span class="merchant"><i class="fas fa-utensils"></i> Sea Sound</span>
+                                    <span class="category">Cafes</span>
+                                    <span class="account">Salary</span>
+                                    <span class="amount expense">- $850.00</span>
+                                    <button class="more-btn"><i class="fas fa-ellipsis-v"></i></button>
+                                </div>
+                                <div class="transaction-item">
+                                    <span class="date">21/05/22</span>
+                                    <span class="merchant"><i class="fas fa-coffee"></i> AromaKava</span>
+                                    <span class="category">Coffee</span>
+                                    <span class="account">Salary</span>
+                                    <span class="amount expense">- $11.40</span>
+                                    <button class="more-btn"><i class="fas fa-ellipsis-v"></i></button>
+                                </div>
+                                <div class="transaction-item">
+                                    <span class="date">20/05/22</span>
+                                    <span class="merchant"><i class="fas fa-shopping-bag"></i> Zara</span>
+                                    <span class="category">Shopping</span>
+                                    <span class="account">Credit Card</span>
+                                    <span class="amount expense">- $125.99</span>
+                                    <button class="more-btn"><i class="fas fa-ellipsis-v"></i></button>
+                                </div>
+                            </div>
+                            <button class="show-more">Show more</button>
+                        </div>
+                    </div>
 
-                        # 3. 中層圖表雙欄佈局 (Money Flow & 本月預算環)
-                        rx.hstack(
-                            # 左：Money Flow 直方圖
-                            rx.card(
-                                rx.vstack(
-                                    rx.heading("Money Flow (60-10-30)", size="3", color=TEXT_MAIN),
-                                    rx.box(
-                                        rx.center(rx.text("【直方圖區域：1月 - 7月 收入/開支對比】", color=TEXT_MUTED, font_size="13px"), height="100%"),
-                                        height="180px", width="100%", margin_top="10px"
-                                    ),
-                                    width="100%",
-                                ),
-                                style={"background_color": CARD_BG, "border": "none", "border-radius": "14px"},
-                                padding="16px 20px",
-                                flex="6",
-                            ),
-                            # 右：本月預算環
-                            rx.card(
-                                rx.vstack(
-                                    rx.heading("本月預算環", size="3", color=TEXT_MAIN),
-                                    rx.box(
-                                        rx.center(
-                                            rx.vstack(
-                                                rx.text("$10,500", font_size="24px", weight="bold", color=TEXT_MAIN),
-                                                rx.text("已用 / $15,000", font_size="11px", color=TEXT_MUTED),
-                                                spacing="0", align="center"
-                                            ),
-                                            height="100%"
-                                        ),
-                                        height="180px", width="100%", margin_top="10px"
-                                    ),
-                                    width="100%",
-                                ),
-                                style={"background_color": CARD_BG, "border": "none", "border-radius": "14px"},
-                                padding="16px 20px",
-                                flex="4",
-                            ),
-                            spacing="4",
-                            width="100%",
-                            align_items="stretch",
-                        ),
+                    <!-- 右侧：储蓄目标 + 支出图表 -->
+                    <div class="col right-col">
+                        <!-- 储蓄目标 -->
+                        <div class="card goals-card">
+                            <div class="card-header">
+                                <h3>Goals</h3>
+                                <button class="btn small-btn">
+                                    <i class="fas fa-plus"></i> Add new
+                                </button>
+                            </div>
+                            <div class="goals-list" id="dashboard-goals-list">
+                                <!-- 同步自 Saving Goals -->
+                            </div>
+                            <button class="show-more">Show more</button>
+                        </div>
 
-                        # 4. 底層雙欄佈局 (最近交易 & 儲蓄進度)
-                        rx.hstack(
-                            # 左：最近交易
-                            rx.card(
-                                rx.vstack(
-                                    rx.heading("最近交易", size="3", color=TEXT_MAIN),
-                                    rx.table.root(
-                                        rx.table.header(
-                                            rx.table.row(
-                                                rx.table.column_header_cell("日期", color=TEXT_MUTED),
-                                                rx.table.column_header_cell("金額", color=TEXT_MUTED),
-                                                rx.table.column_header_cell("項目", color=TEXT_MUTED),
-                                                rx.table.column_header_cell("類別", color=TEXT_MUTED),
-                                            )
-                                        ),
-                                        rx.table.body(), # 可依需求填入數據
-                                        variant="ghost",
-                                        size="1",
-                                    ),
-                                    width="100%",
-                                ),
-                                style={"background_color": CARD_BG, "border": "none", "border-radius": "14px"},
-                                padding="16px 20px",
-                                flex="6",
-                                min_height="120px",
-                            ),
-                            # 右：儲蓄目標進度
-                            rx.card(
-                                rx.vstack(
-                                    rx.heading("儲蓄目標進度", size="3", color=TEXT_MAIN),
-                                    rx.vstack(
-                                        rx.hstack(rx.text("MacBook Pro", font_size="12px", color=TEXT_MAIN), rx.spacer(), rx.text("7%", font_size="12px", color=TEXT_MUTED), width="100%"),
-                                        rx.progress(value=7, color_scheme="purple", size="1", width="100%"),
-                                        rx.hstack(rx.text("新年假期", font_size="12px", color=TEXT_MAIN), rx.spacer(), rx.text("42%", font_size="12px", color=TEXT_MUTED), width="100%"),
-                                        rx.progress(value=42, color_scheme="purple", size="1", width="100%"),
-                                        width="100%",
-                                        spacing="2",
-                                        margin_top="12px",
-                                    ),
-                                    width="100%",
-                                ),
-                                style={"background_color": CARD_BG, "border": "none", "border-radius": "14px"},
-                                padding="16px 20px",
-                                flex="4",
-                                min_height="120px",
-                            ),
-                            spacing="4",
-                            width="100%",
-                            align_items="stretch",
-                        ),
-                        spacing="4",
-                        width="100%",
-                        padding="16px 32px 32px 32px",
-                        flex="1",
-                        overflow="hidden",
-                    ),
-                    spacing="0",
-                    width="100%",
-                    height="100vh",
-                ),
-                flex="1",
-                margin_left="240px",
-                background_color=BG_COLOR,
-                height="100vh",
-                overflow="hidden",
-            ),
-            width="100%",
-        ),
-        width="100%",
-        height="100vh",
-        overflow="hidden",
-    )
+                        <!-- 支出图表 -->
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Expenditure Review</h3>
+                                <div class="chart-filters">
+                                    <select>
+                                        <option>Monthly</option>
+                                        <option>Weekly</option>
+                                        <option>Daily</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <p>Balance</p>
+                                    <p class="value" id="chart-balance">$1,978.5</p>
+                                </div>
+                                <div class="summary-item">
+                                    <p>Income</p>
+                                    <p class="value" id="chart-income">$8,961</p>
+                                </div>
+                                <div class="summary-item">
+                                    <p>Expenses</p>
+                                    <p class="value" id="chart-expenses">$6,941.5</p>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="expenseChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-app = rx.App()
-app.add_page(index, route="/")
+            <!-- Budget Planner 区域 -->
+            <section id="budget" class="page">
+                <div class="page-header">
+                    <h2>Budget Planner</h2>
+                    <div class="header-actions">
+                        <select id="budget-year">
+                            <option>2025</option>
+                            <option>2024</option>
+                            <!-- JS 动态添加 -->
+                        </select>
+                        <select id="budget-month">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <button class="btn primary-btn">
+                            <i class="fas fa-save"></i>
+                            Save Budget
+                        </button>
+                    </div>
+                </div>
+
+                <div class="budget-container">
+                    <div class="budget-section">
+                        <h3>Income</h3>
+                        <div class="form-group">
+                            <label>Source</label>
+                            <input type="text" placeholder="e.g. Salary, Freelance">
+                        </div>
+                        <div class="form-group">
+                            <label>Amount ($)</label>
+                            <input type="number" placeholder="0.00">
+                        </div>
+                        <button class="btn secondary-btn add-income">
+                            <i class="fas fa-plus"></i> Add Income
+                        </button>
+                        <div class="income-list">
+                            <!-- 收入项会通过JS添加 -->
+                        </div>
+                    </div>
+
+                    <div class="budget-section">
+                        <h3>Expenses</h3>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select>
+                                <option>Cafes & Restaurants</option>
+                                <option>Groceries</option>
+                                <option>Transport</option>
+                                <option>Entertainment</option>
+                                <option>Utilities</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount ($)</label>
+                            <input type="number" placeholder="0.00">
+                        </div>
+                        <button class="btn secondary-btn add-expense">
+                            <i class="fas fa-plus"></i> Add Expense
+                        </button>
+                        <div class="expense-list">
+                            <!-- 支出项会通过JS添加 -->
+                        </div>
+                    </div>
+
+                    <div class="budget-summary">
+                        <h3>Budget Summary</h3>
+                        <div class="summary-row">
+                            <p>Total Income</p>
+                            <p id="total-income">$0.00</p>
+                        </div>
+                        <div class="summary-row">
+                            <p>Total Expenses</p>
+                            <p id="total-expenses">$0.00</p>
+                        </div>
+                        <div class="summary-row">
+                            <p>Projected Savings</p>
+                            <p id="projected-savings">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Actual Expenses 区域 -->
+            <section id="expenses" class="page">
+                <div class="page-header">
+                    <h2>Actual Expenses</h2>
+                    <button class="btn primary-btn" id="add-transaction-btn">
+                        <i class="fas fa-plus"></i>
+                        Add Transaction
+                    </button>
+                </div>
+
+                <!-- 交易表单（默认隐藏） -->
+                <div class="transaction-form card hidden">
+                    <div class="form-header">
+                        <h3>Add New Transaction</h3>
+                        <button class="close-form"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="transaction-date">
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="transaction-type">
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" id="transaction-desc" placeholder="e.g. Groceries, Salary">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="transaction-category">
+                                <option>Cafes & Restaurants</option>
+                                <option>Groceries</option>
+                                <option>Transport</option>
+                                <option>Entertainment</option>
+                                <option>Utilities</option>
+                                <option>Salary</option>
+                                <option>Freelance</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Account</label>
+                            <select id="transaction-account">
+                                <option>Salary</option>
+                                <option>Virtual cash account</option>
+                                <option>Credit Card</option>
+                                <option>Savings</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount ($)</label>
+                            <input type="number" id="transaction-amount" placeholder="0.00">
+                        </div>
+                    </div>
+                    <button class="btn primary-btn save-transaction">
+                        <i class="fas fa-save"></i> Save Transaction
+                    </button>
+                </div>
+
+                <!-- 实际交易列表 -->
+                <div class="card transactions-table-card">
+                    <div class="card-header">
+                        <h3>Transaction History</h3>
+                        <div class="table-filters">
+                            <input type="text" placeholder="Search transactions...">
+                            <select>
+                                <option>All Transactions</option>
+                                <option>Income Only</option>
+                                <option>Expenses Only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="transactions-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Account</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="actual-transactions-list">
+                                <!-- 交易记录会通过JS添加 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Saving Goals 区域 -->
+            <section id="savings" class="page">
+                <div class="page-header">
+                    <h2>Saving Goal Tracker</h2>
+                    <button class="btn primary-btn" id="add-goal-btn">
+                        <i class="fas fa-plus"></i>
+                        Add New Goal
+                    </button>
+                </div>
+
+                <!-- 目标表单（默认隐藏） -->
+                <div class="goal-form card hidden">
+                    <div class="form-header">
+                        <h3>Add Saving Goal</h3>
+                        <button class="close-form"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="form-group">
+                        <label>Goal Name</label>
+                        <input type="text" id="goal-name" placeholder="e.g. Buy a car, Vacation">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Target Amount ($)</label>
+                            <input type="number" id="goal-target" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Current Savings ($)</label>
+                            <input type="number" id="goal-current" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline (Optional)</label>
+                        <input type="date" id="goal-deadline">
+                    </div>
+                    <button class="btn primary-btn save-goal">
+                        <i class="fas fa-save"></i> Save Goal
+                    </button>
+                </div>
+
+                <!-- 目标列表 -->
+                <div class="goals-grid">
+                    <!-- 目标卡片会通过JS添加 -->
+                    <div class="goal-card">
+                        <div class="progress-circle" style="--progress:70%">70%</div>
+                        <div class="goal-details">
+                            <h3>Buy a car !</h3>
+                            <p class="target">Target: $9,500</p>
+                            <p class="saved">Saved: $6,080</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:70%"></div>
+                            </div>
+                            <div class="goal-actions">
+                                <button class="btn small-btn edit-goal"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn small-btn delete-goal"><i class="fas fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="goal-card">
+                        <div class="progress-circle" style="--progress:45%">45%</div>
+                        <div class="goal-details">
+                            <h3>Vacation</h3>
+                            <p class="target">Target: $4,000</p>
+                            <p class="saved">Saved: $1,800</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:45%"></div>
+                            </div>
+                            <div class="goal-actions">
+                                <button class="btn small-btn edit-goal"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn small-btn delete-goal"><i class="fas fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shopping List 区域 -->
+            <section id="shopping" class="page">
+                <div class="page-header">
+                    <h2>Shopping List</h2>
+                    <div class="header-actions">
+                        <button class="btn primary-btn" id="create-folder-btn">
+                            <i class="fas fa-folder-plus"></i>
+                            Create Folder
+                        </button>
+                        <button class="btn primary-btn" id="add-product-btn">
+                            <i class="fas fa-plus"></i>
+                            Add Product
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 商品表单（默认隐藏） -->
+                <div class="product-form card hidden">
+                    <div class="form-header">
+                        <h3>Add New Product</h3>
+                        <button class="close-form"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Product Name</label>
+                            <input type="text" id="product-name" placeholder="e.g. Laptop, Milk">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <input type="text" id="product-category" placeholder="e.g. Electronics, Groceries">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Price ($)</label>
+                            <input type="number" id="product-price" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" id="product-qty" placeholder="1" min="1" value="1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Product Photo (Optional)</label>
+                        <input type="file" id="product-photo" accept="image/*">
+                        <div class="photo-preview" id="photo-preview"></div>
+                    </div>
+                    <button class="btn primary-btn save-product">
+                        <i class="fas fa-save"></i> Save Product
+                    </button>
+                </div>
+
+                <!-- 购物清单 -->
+                <div class="shopping-grid">
+                    <!-- 商品卡片和文件夹会通过JS添加 -->
+                </div>
+            </section>
+
+            <!-- Settings 区域 (新增) -->
+            <section id="settings" class="page">
+                <div class="page-header">
+                    <h2>Settings</h2>
+                </div>
+                <div class="card settings-card">
+                    <h3>User Profile</h3>
+                    <div class="form-group">
+                        <label>User Name</label>
+                        <input type="text" id="settings-name" placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label>User Icon</label>
+                        <input type="file" id="settings-icon" accept="image/*">
+                        <div class="photo-preview" id="settings-preview"></div>
+                    </div>
+                    <button class="btn primary-btn save-settings">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 图片放大弹窗 -->
+    <div class="image-modal" id="imageModal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script_3.js"></script>
+</body>
+</html>
